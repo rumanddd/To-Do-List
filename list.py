@@ -44,33 +44,34 @@ def remove_task():
 
 # GUI Setup
 root = tk.Tk()
-root.title("To-Do List")
+root.title("To-Do List") # Set window title
 root.geometry("400x400")  # Set window size
 
 # Create widgets
-frame = tk.Frame(root)
-frame.pack(pady=10)
+frame = tk.Frame(root) # Create a frame
+frame.pack(pady=10) # Adds spacing above the listbox
 
-listbox = tk.Listbox(frame, width=40, height=10)
-listbox.pack(side=tk.LEFT)
+listbox = tk.Listbox(frame, width=40, height=10) # Create listbox
+listbox.pack(side=tk.LEFT) # Places it to the left side
 
-scrollbar = tk.Scrollbar(frame)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-listbox.config(yscrollcommand=scrollbar.set)
-scrollbar.config(command=listbox.yview)
+scrollbar = tk.Scrollbar(frame) # Creates a vertical scrollbar
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y) # Places scrollbar on the right and fills it vertically
+listbox.config(yscrollcommand=scrollbar.set) # Links the scrollbar to the listbox, allowing the scrollbar to update when the listbox content changes.
+scrollbar.config(command=listbox.yview) # Configures the scrollbar to scroll the listbox when moved, so dragging the scrollbar updates the listbox view.
 
-entry = tk.Entry(root, width=40)
-entry.pack(pady=5)
 
-add_button = tk.Button(root, text="Add Task", command=add_task)
-add_button.pack(pady=5)
+entry = tk.Entry(root, width=40) # Creates an input field (Entry) where users type tasks and ets to width
+entry.pack(pady=5) # Adds vertical padding of 5
 
-remove_button = tk.Button(root, text="Remove Task", command=remove_task)
-remove_button.pack(pady=5)
+add_button = tk.Button(root, text="Add Task", command=add_task) # Creates a button labeled "Add Task" and calls add_task() when clicked
+add_button.pack(pady=5) # Adds vertical padding of 5
+
+remove_button = tk.Button(root, text="Remove Task", command=remove_task) # Creates a button labeled "Remove Task" and calls remove_task() when clicked
+remove_button.pack(pady=5) # Adds vertical padding of 5
 
 # Load tasks when app starts
-for task in load_tasks():
-    listbox.insert(tk.END, task)
+for task in load_tasks(): # Retrieves tasks from tasks.txt
+    listbox.insert(tk.END, task) # Inserts each task into the listbox
 
 # Run the Tkinter loop
-root.mainloop()
+root.mainloop() # Runs the application and keeps the window open.
