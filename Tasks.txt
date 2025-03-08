@@ -1,5 +1,0 @@
-Create a database to store tasks
-Improve error handling (e.g., prevent duplicate tasks).
-Add task categories (Work, Personal, etc.).
-Improve UI
-Make it a standalone app
