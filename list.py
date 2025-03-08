@@ -1,105 +1,139 @@
 import tkinter as tk
 from tkinter import messagebox
 import sqlite3
+import os
+from PIL import Image, ImageTk
 
 # Database setup
 DATABASE = "tasks.db"
 
-# Function to connect to the SQLite database and create the tasks table if it doesn't exist
 def connect_db():
     """Connects to the SQLite database and creates the tasks table if it doesn't exist."""
-    conn = sqlite3.connect(DATABASE)  # Connect to the database
-    cursor = conn.cursor()  # Create a cursor object to interact with the database
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task TEXT NOT NULL
+            task TEXT NOT NULL UNIQUE
         )
-    ''')  # Creates the tasks table if it doesn't exist
-    conn.commit()  # Commits the changes to the database
-    conn.close()  # Closes the connection
+    ''')
+    conn.commit()
+    conn.close()
 
-# Function to LOAD tasks from the database
 def load_tasks():
     """Retrieves tasks from the database and returns them as a list."""
-    conn = sqlite3.connect(DATABASE)  # Connects to the database
-    cursor = conn.cursor()  # Create a cursor object to interact with the database
-    cursor.execute("SELECT task FROM tasks")  # Retrieves tasks from the tasks table
-    tasks = cursor.fetchall()  # Fetches all the tasks as a list of tuples
-    conn.close()  # Closes the connection
-    return [task[0] for task in tasks]  # Returns a list of tasks (extracting the task from the tuple)
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT task FROM tasks")
+    tasks = cursor.fetchall()
+    conn.close()
+    return [task[0] for task in tasks]
 
-# Function to save tasks to the database
 def save_tasks():
     """Saves all tasks from the listbox to the SQLite database."""
-    conn = sqlite3.connect(DATABASE)  # Connect to the database
-    cursor = conn.cursor()  # Create a cursor object
-    cursor.execute("DELETE FROM tasks")  # Delete all tasks from the table
-    tasks = listbox.get(0, tk.END)  # Get all tasks from the listbox
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM tasks")
+    tasks = listbox.get(0, tk.END)
     for task in tasks:
-        cursor.execute("INSERT INTO tasks (task) VALUES (?)", (task,))  # Insert each task into the database
-    conn.commit()  # Save changes
-    conn.close()  # Close the connection
+        cursor.execute("INSERT INTO tasks (task) VALUES (?)", (task,))
+    conn.commit()
+    conn.close()
 
-# Function to ADD task
 def add_task():
     """Adds a task to the listbox and saves it to the database."""
-    task = entry.get().strip()  # Retrieves the task entered by the user
+    task = entry.get().strip()
     if task:
-        listbox.insert(tk.END, task)  # Inserts the task into the listbox at the end
-        entry.delete(0, tk.END)  # Clears the input field
-        save_tasks()  # Saves the tasks to the database
+        if task in listbox.get(0, tk.END):
+            messagebox.showwarning("Warning", "Task already exists!")
+            return
+        listbox.insert(tk.END, task)
+        entry.delete(0, tk.END)
+        save_tasks()
     else:
-        messagebox.showwarning("Warning", "Please enter something into the text field.")  # Displays a warning if the input field is empty
+        messagebox.showwarning("Warning", "Please enter something into the text field.")
 
-# Function to REMOVE task
 def remove_task():
     """Removes the selected task from the listbox and the database."""
     try:
-        selected_index = listbox.curselection()[0]  # Retrieves the index of the selected task
-        task = listbox.get(selected_index)  # Retrieves the task at the selected index
-        listbox.delete(selected_index)  # Deletes the task from the listbox
-
-        # Remove the task from the database
-        conn = sqlite3.connect(DATABASE)  # Connect to the database
-        cursor = conn.cursor()  # Create a cursor object to interact with the database
-        cursor.execute("DELETE FROM tasks WHERE task=?", (task,))  # Deletes the task from the database
-        conn.commit()  # Commits the changes to the database
-        conn.close()  # Closes the connection
-
+        selected_index = listbox.curselection()[0]
+        task = listbox.get(selected_index)
+        listbox.delete(selected_index)
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM tasks WHERE task=?", (task,))
+        conn.commit()
+        conn.close()
     except IndexError:
-        messagebox.showwarning("Warning", "Please select a task to remove.")  # Displays a warning if no task is selected
+        messagebox.showwarning("Warning", "Please select a task to remove.")
 
 # GUI Setup
 root = tk.Tk()
-root.title("To-Do List")  # Set window title
-root.geometry("400x400")  # Set window size
+root.title("To-Do List")
+root.geometry("420x500")
+root.configure(bg="#121212")  # Dark background
 
-# Create widgets
-frame = tk.Frame(root)  # Create a frame
-frame.pack(pady=10)  # Adds spacing above the listbox
+# Add background image or pattern
+bg_path = "/Users/ruman/PycharmProjects/To-Do-List/background.png"  # Absolute path to the image
+if os.path.exists(bg_path):
+    bg_image = Image.open(bg_path)
+    bg_image = bg_image.resize((420, 500))  # Resize image to fit the window size
+    bg_image = ImageTk.PhotoImage(bg_image)
+    bg_label = tk.Label(root, image=bg_image)
+    bg_label.place(relwidth=1, relheight=1)
+else:
+    print("Warning: Background image not found. Running without it.")
 
-listbox = tk.Listbox(frame, width=40, height=10)  # Create listbox
-listbox.pack(side=tk.LEFT)  # Places it to the left side
+# Styling
+frame = tk.Frame(root, bg="#121212")
+frame.pack(pady=10)
 
-scrollbar = tk.Scrollbar(frame)  # Creates a vertical scrollbar
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)  # Places scrollbar on the right and fills it vertically
-listbox.config(yscrollcommand=scrollbar.set)  # Links the scrollbar to the listbox
-scrollbar.config(command=listbox.yview)  # Configures the scrollbar to scroll the listbox
+listbox = tk.Listbox(frame, width=40, height=10, bg="#1e1e1e", fg="white", font=("Arial", 12), relief=tk.FLAT, selectbackground="#ff9800", selectforeground="black")
+listbox.pack(side=tk.LEFT, padx=5)
 
-entry = tk.Entry(root, width=40)  # Create input field for adding tasks
-entry.pack(pady=5)  # Adds vertical padding
+scrollbar = tk.Scrollbar(frame)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+listbox.config(yscrollcommand=scrollbar.set)
+scrollbar.config(command=listbox.yview)
 
-add_button = tk.Button(root, text="Add Task", command=add_task)  # Add button
-add_button.pack(pady=5)  # Adds vertical padding
+entry = tk.Entry(root, width=40, font=("Arial", 12), bg="#252526", fg="white", relief=tk.FLAT, insertbackground="white")
+entry.pack(pady=5)
 
-remove_button = tk.Button(root, text="Remove Task", command=remove_task)  # Remove button
-remove_button.pack(pady=5)  # Adds vertical padding
+button_style = {
+    "font": ("Arial", 12, "bold"),
+    "bg": "#ff9800",
+    "fg": "black",
+    "bd": 0,
+    "relief": tk.FLAT,
+    "padx": 15,
+    "pady": 8,
+    "activebackground": "#e68900",
+    "cursor": "hand2",
+    "borderwidth": 2,
+    "highlightthickness": 0,
+}
+
+def on_enter(e):
+    e.widget.config(bg="#e68900", relief=tk.RAISED)
+
+def on_leave(e):
+    e.widget.config(bg="#ff9800", relief=tk.FLAT)
+
+add_button = tk.Button(root, text="Add Task", command=add_task, **button_style)
+add_button.pack(pady=5, ipadx=5, ipady=2)
+add_button.bind("<Enter>", on_enter)
+add_button.bind("<Leave>", on_leave)
+add_button.config(borderwidth=5, relief=tk.RIDGE)
+
+remove_button = tk.Button(root, text="Remove Task", command=remove_task, **button_style)
+remove_button.pack(pady=5, ipadx=5, ipady=2)
+remove_button.bind("<Enter>", on_enter)
+remove_button.bind("<Leave>", on_leave)
+remove_button.config(borderwidth=5, relief=tk.RIDGE)
 
 # Initialize the database and load tasks
-connect_db()  # Setup database and table
-for task in load_tasks():  # Retrieve tasks from the database
-    listbox.insert(tk.END, task)  # Insert each task into the listbox
+connect_db()
+for task in load_tasks():
+    listbox.insert(tk.END, task)
 
-# Run the Tkinter loop
-root.mainloop()  # Runs the Tkinter event loop
+root.mainloop()
